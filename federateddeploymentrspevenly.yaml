@@ -1,0 +1,11 @@
+apiVersion: scheduling.kubefed.io/v1alpha1
+kind: ReplicaSchedulingPreference
+metadata:
+  name: test-deployment
+  namespace: test-namespace
+spec:
+  targetKind: FederatedDeployment
+  totalReplicas: 9
+  clusters:
+    "*":
+      weight: 1
