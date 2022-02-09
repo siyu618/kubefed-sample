@@ -1,0 +1,85 @@
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: kubia1
+  namespace: test-namespace
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        app: kubia1
+    spec:
+      ports:
+      - name: http
+        port: 80
+      selector:
+        app: kubia1
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedStatefulSet
+metadata:
+  name: kubia1
+  namespace: test-namespace
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metedata:
+      ownerReferences:
+      - apiVersion: v1
+        controller: true
+        kind: Pod
+        name: kubia-0
+        uid: dcf4cd2e-c861-4520-8c23-4ddda7765c84
+    spec:
+      podManagementPolicy: Parallel
+      revisionHistoryLimit: 10
+      replicas: 2
+      selector:
+        matchLabels:
+          app: kubia1
+      template:
+        metadata:
+          labels:
+            app: kubia1
+          ownerReferences:
+          - apiVersion: v1
+            controller: true
+            kind: Pod
+            name: kubia-0
+            uid: dcf4cd2e-c861-4520-8c23-4ddda7765c84
+        spec:
+          containers:
+          - image: luksa/kubia-pet
+            name: kubia1
+            env:
+            - name: SPARK_USER
+              value: yipen
+            ports:
+            - containerPort: 8080
+              name: http
+            volumeMounts:
+            - mountPath: /var/data
+              name: data
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          terminationGracePeriodSeconds: 30
+      updateStrategy:
+        rollingUpdate:
+          partition: 0
+        type: RollingUpdate
+      volumeClaimTemplates:
+      - metadata:
+          name: data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Mi
