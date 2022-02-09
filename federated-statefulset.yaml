@@ -1,0 +1,60 @@
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedService
+metadata:
+  name: kubia
+  namespace: test-namespace
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    metadata:
+      labels:
+        app: kubia
+    spec:
+      ports:
+      - name: http
+        port: 80
+      selector:
+        app: kubia
+---
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedStatefulSet
+metadata:
+  name: kubia
+  namespace: test-namespace
+spec:
+  placement:
+    clusterSelector:
+      matchLabels: {}
+  template:
+    spec:
+      replicas: 3
+      selector:
+        matchLabels:
+          app: kubia
+      serviceName: kubia
+      template:
+        metadata:
+          labels:
+            app: kubia
+        spec:
+          containers:
+          - image: luksa/kubia-pet
+            name: kubia
+            ports:
+            - containerPort: 8080
+              name: http
+            volumeMounts:
+            - mountPath: /var/data
+              name: data
+      volumeClaimTemplates:
+      - metadata:
+          name: data
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Mi
